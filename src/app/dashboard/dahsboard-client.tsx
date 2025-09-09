@@ -1,6 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { User } from "@/types/auth/UserInterface";
 import {
   Card,
   CardContent,
@@ -11,8 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bot, Power, User, Mail, Calendar } from "lucide-react";
-
 import {
   Dialog,
   DialogContent,
@@ -21,14 +21,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Bot, Power, User2, Calendar } from "lucide-react";
 
-const userData = {
-  name: "Juan Pérez",
-  email: "juan.perez@email.com",
-  avatar: "/professional-avatar.png",
-  joinDate: "Enero 2024",
-  plan: "Pro",
-};
 
 const userBots = [
   {
@@ -43,6 +37,15 @@ const userBots = [
 
 export default function DashboardClient() {
   const router = useRouter();
+   const [userData, setUserData] = useState<User | null>(null);
+
+   useEffect(() => {
+     const storedUser = localStorage.getItem("userData");
+     if (storedUser) {
+       setUserData(JSON.parse(storedUser));
+     }
+   }, []);
+
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -61,6 +64,7 @@ export default function DashboardClient() {
     try {
       const response = await fetch("/api/auth/logout", { method: "POST" });
       await response.json();
+      localStorage.removeItem("userData");
       router.push("login");
     } catch (err) {
       console.error("Error al cerrar sesión:", err);
@@ -106,7 +110,7 @@ export default function DashboardClient() {
         <Card className="w-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
+              <User2 className="h-5 w-5" />
               Mi información:
             </CardTitle>
           </CardHeader>
@@ -115,10 +119,10 @@ export default function DashboardClient() {
               <Avatar className="h-16 w-16">
                 <AvatarImage
                   // src={userData.avatar || "/placeholder.svg"}
-                  alt={userData.name}
+                  alt={userData?.nombre}
                 />
                 <AvatarFallback>
-                  {userData.name
+                  {userData?.nombre
                     .split(" ")
                     .map((n) => n[0])
                     .join("")}
@@ -126,17 +130,20 @@ export default function DashboardClient() {
               </Avatar>
               <div className="flex-1 space-y-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold">{userData.name}</h3>
-                  <Badge variant="outline">{userData.plan}</Badge>
+                  <h3 className="text-xl font-semibold">{userData?.nombre}</h3>
+                  {/* <Badge variant="outline">{userData.plan}</Badge> */}
                 </div>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
+                  {/* <div className="flex items-center gap-1">
                     <Mail className="h-4 w-4" />
                     {userData.email}
-                  </div>
+                  </div> */}
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    Miembro desde {userData.joinDate}
+                    Miembro desde{" "}
+                    {userData?.fecha_ingreso
+                      ? new Date(userData.fecha_ingreso).toLocaleDateString()
+                      : "No disponible"}
                   </div>
                 </div>
               </div>

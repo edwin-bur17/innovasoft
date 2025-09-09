@@ -59,6 +59,7 @@ export async function POST(request: Request) {
       user: {
         usuario: user.usuario,
         nombre: user.Nombre,
+        fecha_ingreso: user.fecha_ingreso,
         tipo: user.tipo,
         sede: user.sede,
         cliente: user.cliente,

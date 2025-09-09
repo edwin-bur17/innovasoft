@@ -33,18 +33,19 @@ export function LoginForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-
       const data = await response.json();
+    if (!response.ok) {
+      toast.error(data.error || "Error en inicio de sesión");
+    } else {
+      localStorage.setItem("userData", JSON.stringify(data.user));
+      toast.success("Inicio de sesión exitoso");
+      router.push("/dashboard");
+    }
 
-      if (!response.ok) {
-        toast.error(data.error || "Error en inicio de sesión"); // ❌ error
-      } else {
-        toast.success("Inicio de sesión exitoso 🎉"); // ✅ éxito
-        router.push("/dashboard");
-      }
+
     } catch (err) {
       console.error(err);
-      toast.error("Error de red en la solicitud"); // ⚠️ error de red
+      toast.error("Error de red en la solicitud");
     } finally {
       setIsLoading(false);
     }
