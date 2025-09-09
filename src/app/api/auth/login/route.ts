@@ -67,9 +67,10 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error(error);
-    return NextResponse.json(
-      { error: "Error procesando la solicitud" },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      message: "Error al procesar la solicitud de login",
+      status: 500,
+      error,
+    });
   }
 }
