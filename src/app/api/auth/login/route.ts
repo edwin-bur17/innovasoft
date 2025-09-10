@@ -17,6 +17,16 @@ export async function POST(request: Request) {
       );
     }
 
+    // Agrega logs para debug
+    console.log("🔄 Intentando conectar a la base de datos...");
+    console.log("📊 Variables de entorno:", {
+      host: process.env.DB_HOST ? "✅ SET" : "❌ NOT SET",
+      user: process.env.DB_USER ? "✅ SET" : "❌ NOT SET",
+      password: process.env.DB_PASS ? "✅ SET" : "❌ NOT SET",
+      database: process.env.DB_NAME ? "✅ SET" : "❌ NOT SET",
+      port: process.env.DB_PORT || "3306 (default)",
+    });
+
     const [rows] = await db.query<User[]>(
       "SELECT * FROM login WHERE usuario = ?",
       [username]
@@ -54,23 +64,28 @@ export async function POST(request: Request) {
       path: "/",
     });
 
-    return NextResponse.json({
-      message: "Login exitoso",
-      user: {
-        usuario: user.usuario,
-        nombre: user.Nombre,
-        fecha_ingreso: user.fecha_ingreso,
-        tipo: user.tipo,
-        sede: user.sede,
-        cliente: user.cliente,
+    return NextResponse.json(
+      {
+        message: "Login exitoso",
+        user: {
+          usuario: user.usuario,
+          nombre: user.Nombre,
+          fecha_ingreso: user.fecha_ingreso,
+          tipo: user.tipo,
+          sede: user.sede,
+          cliente: user.cliente,
+        },
       },
-    });
+      { status: 200 }
+    );
   } catch (error) {
     console.error(error);
-    return NextResponse.json({
-      message: "Error al procesar la solicitud de login",
-      status: 500,
-      error,
-    });
+    return NextResponse.json(
+      {
+        message: "Error al procesar la solicitud de login",
+        error: error,
+      },
+      { status: 500 }
+    );
   }
 }
