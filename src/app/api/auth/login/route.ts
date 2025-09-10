@@ -24,7 +24,15 @@ export async function POST(req: Request) {
       );
     }
 
-    const user = await prisma.usuario.findUnique({ where: { usuario } });
+    const user = await prisma.usuario.findUnique({
+      where: { usuario },
+      include: {
+        licencias: {
+          include: { servicio: true },
+        },
+      },
+    });
+
     if (!user) {
       return NextResponse.json(
         { message: "Usuario o contraseña inválidos" },
@@ -55,6 +63,8 @@ export async function POST(req: Request) {
           nombre: user.nombre,
           usuario: user.usuario,
           correo: user.correo,
+          fecha_creacion: user.fecha_creacion,
+          licencias: user.licencias,
         },
       },
       { status: 200 }

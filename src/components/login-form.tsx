@@ -33,9 +33,7 @@ export function LoginForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ usuario, contrasena }),
       });
-      console.log("res ->", response)
       const data = await response.json();
-      console.log("data del login ->", data)
     if (!response.ok) {
       toast.error(data.message || "Error en inicio de sesión");
     } else {

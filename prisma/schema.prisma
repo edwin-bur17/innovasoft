@@ -25,8 +25,10 @@ model Usuario {
 
 model Servicio {
   id                   Int      @id @default(autoincrement())
-  fecha_inicio         DateTime
-  fecha_fin            DateTime
+  nombre               String   @db.NVarChar(100)
+  descripcion          String   @db.NVarChar(255)
+  fecha_inicio         DateTime?   
+  fecha_fin            DateTime?  
   precio               Decimal  @db.Decimal(10, 2)
   fecha_creacion       DateTime @default(now())
   fecha_actualizacion  DateTime @updatedAt
@@ -42,7 +44,7 @@ model Licencia {
   id_usuario           Int
   id_servicio          Int
   caducidad            DateTime @db.Date
-  estado               Boolean  @default(true)
+  estado               Boolean  @default(false)
   fecha_creacion       DateTime @default(now())
   fecha_actualizacion  DateTime @updatedAt
   
@@ -50,7 +52,5 @@ model Licencia {
   usuario              Usuario  @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
   servicio             Servicio @relation(fields: [id_servicio], references: [id], onDelete: Cascade)
   
-  // Restricción única
-  @@unique([id_usuario, id_servicio])
   @@map("Licencia")
 }

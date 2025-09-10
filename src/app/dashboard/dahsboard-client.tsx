@@ -21,51 +21,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Bot, Power, User2, Mail } from "lucide-react";
-
-
-const userBots = [
-  {
-    id: 1,
-    name: "Nombre del bot",
-    type: "tipo",
-    status: "Activo",
-    description: "Descripcipción del bot",
-    // lastActivity: "Hace 2 horas",
-  },
-];
+import { Bot, Power, User2, Mail, Calendar } from "lucide-react";
 
 export default function DashboardClient() {
   const router = useRouter();
-   const [userData, setUserData] = useState<User | null>(null);
+  const [userData, setUserData] = useState<User | null>(null);
 
-   useEffect(() => {
-     const storedUser = localStorage.getItem("userData");
-     if (storedUser) {
-       setUserData(JSON.parse(storedUser));
-     }
-   }, []);
-
-
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case "Activo":
-        return "default";
-      case "Inactivo":
-        return "secondary";
-      case "Pausado":
-        return "outline";
-      default:
-        return "secondary";
+  useEffect(() => {
+    const storedUser = localStorage.getItem("userData");
+    if (storedUser) {
+      setUserData(JSON.parse(storedUser));
+    } else {
+      router.push("/login");
     }
-  };
+  }, [router]);
 
   const handleLogout = async () => {
     try {
       const response = await fetch("/api/auth/logout", { method: "POST" });
       await response.json();
       localStorage.removeItem("userData");
-      router.push("login");
+      router.push("/login");
     } catch (err) {
       console.error("Error al cerrar sesión:", err);
     }
@@ -117,10 +93,7 @@ export default function DashboardClient() {
           <CardContent>
             <div className="flex items-center space-x-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage
-                  // src={userData.avatar || "/placeholder.svg"}
-                  alt={userData?.nombre}
-                />
+                <AvatarImage alt={userData?.nombre} />
                 <AvatarFallback>
                   {userData?.nombre
                     .split(" ")
@@ -131,7 +104,6 @@ export default function DashboardClient() {
               <div className="flex-1 space-y-2">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-semibold">{userData?.nombre}</h3>
-                  {/* <Badge variant="outline">{userData.plan}</Badge> */}
                 </div>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
@@ -139,11 +111,11 @@ export default function DashboardClient() {
                     {userData?.correo}
                   </div>
                   <div className="flex items-center gap-1">
-                    {/* <Calendar className="h-4 w-4" /> */}
-                    {/* Miembro desde{" "}
-                    {userData?.fecha_ingreso
-                      ? new Date(userData.fecha_ingreso).toLocaleDateString()
-                      : "No disponible"} */}
+                    <Calendar className="h-4 w-4" />
+                    Miembro desde{" "}
+                    {userData?.fecha_creacion
+                      ? new Date(userData.fecha_creacion).toLocaleDateString()
+                      : "No disponible"}
                   </div>
                 </div>
               </div>
@@ -151,35 +123,46 @@ export default function DashboardClient() {
           </CardContent>
         </Card>
 
-        {/* Bots Grid */}
+        {/* Licencias Grid */}
         <div>
-          <h2 className="text-2xl font-bold mb-4">Mis Bots</h2>
+          <h2 className="text-2xl font-bold mb-4">Mis Licencias</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {userBots.map((bot) => (
-              <Card key={bot.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <Bot className="h-8 w-8 text-primary" />
-                    <Badge variant={getStatusVariant(bot.status)}>
-                      {bot.status}
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-lg">{bot.name}</CardTitle>
-                  <CardDescription className="text-sm">
-                    {bot.type}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    {bot.description}
-                  </p>
-                  {/* <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Activity className="h-3 w-3" />
-                    {bot.lastActivity}
-                  </div> */}
-                </CardContent>
-              </Card>
-            ))}
+            {userData?.licencias?.length ? (
+              userData.licencias.map((licencia) => (
+                <Card
+                  key={licencia.id}
+                  className="hover:shadow-lg transition-shadow"
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <Bot className="h-8 w-8 text-primary" />
+                      <Badge
+                        variant={licencia.estado ? "default" : "secondary"}
+                      >
+                        {licencia.estado ? "Activa" : "Inactiva"}
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-lg">
+                      {licencia.servicio.nombre}
+                    </CardTitle>
+                    <CardDescription className="text-sm">
+                      {licencia.servicio.descripcion}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Caduca el{" "}
+                      {new Date(licencia.caducidad).toLocaleDateString()}
+                    </p>
+                    <p className="text-sm">
+                      Precio: ${licencia.servicio.precio}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <p className="text-muted-foreground">No tienes licencias aún</p>
+            )}
           </div>
         </div>
       </div>
