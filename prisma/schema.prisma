@@ -40,17 +40,30 @@ model Servicio {
 }
 
 model Licencia {
-  id                   Int      @id @default(autoincrement())
+  id                   Int       @id @default(autoincrement())
   id_usuario           Int
   id_servicio          Int
-  caducidad            DateTime @db.Date
-  estado               Boolean  @default(false)
-  fecha_creacion       DateTime @default(now())
-  fecha_actualizacion  DateTime @updatedAt
-  
+  caducidad            DateTime  @db.Date
+  estado               Boolean   @default(false)
+  fecha_creacion       DateTime  @default(now())
+  fecha_actualizacion  DateTime  @updatedAt
+
   // Relaciones
-  usuario              Usuario  @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
-  servicio             Servicio @relation(fields: [id_servicio], references: [id], onDelete: Cascade)
-  
+  usuario              Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+  servicio             Servicio  @relation(fields: [id_servicio], references: [id], onDelete: Cascade)
+  procesos             Proceso[] 
+
   @@map("Licencia")
 }
+
+model Proceso {
+  id              Int       @id @default(autoincrement())
+  id_licencia     Int      
+  archivo_path    String    @db.NVarChar(255)
+  fecha_subida    DateTime  @default(now())
+
+  licencia        Licencia  @relation(fields: [id_licencia], references: [id], onDelete: Cascade)
+
+  @@map("Proceso")
+}
+

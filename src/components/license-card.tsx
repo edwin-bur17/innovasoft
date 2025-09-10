@@ -13,36 +13,82 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Bot, Upload, FileText } from "lucide-react";
+import { Bot, Upload, FileText, CheckCircle, AlertCircle } from "lucide-react";
 
 interface LicenseCardProps {
   licencia: Licencia;
 }
 
+interface UploadResponse {
+  success: boolean;
+  proceso?: {
+    id: number;
+    archivo_path: string;
+    fecha_subida: string;
+  };
+  error?: string;
+}
+
 export default function LicenseCard({ licencia }: LicenseCardProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
+  const [uploadMessage, setUploadMessage] = useState<string>("");
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type === "text/plain") {
       setSelectedFile(file);
+      setUploadStatus("idle");
+      setUploadMessage("");
     } else {
       setSelectedFile(null);
-      alert("Por favor selecciona un archivo .txt válido");
+      setUploadStatus("error");
+      setUploadMessage("Por favor selecciona un archivo .txt válido");
     }
   };
 
-  const handleActivate = () => {
-    if (selectedFile) {
-      // Aquí iría la lógica para activar/iniciar con el archivo
-      console.log("Iniciando con archivo:", selectedFile.name);
-      // Ejemplo de lectura del archivo:
-      // const reader = new FileReader();
-      // reader.onload = (e) => {
-      //   const content = e.target?.result;
-      //   // Procesar contenido del archivo
-      // };
-      // reader.readAsText(selectedFile);
+  const handleUploadFile = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+    setUploadStatus("idle");
+    setUploadMessage("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      formData.append("licenciaId", licencia.id.toString());
+
+      const response = await fetch("/api/procesos/cargar-txt", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result: UploadResponse = await response.json();
+
+      if (result.success) {
+        setUploadStatus("success");
+        setUploadMessage("Archivo subido exitosamente");
+        setSelectedFile(null);
+        const fileInput = document.getElementById(
+          "file-upload"
+        ) as HTMLInputElement;
+        if (fileInput) fileInput.value = "";
+
+        console.log("Proceso creado:", result.proceso);
+      } else {
+        setUploadStatus("error");
+        setUploadMessage(result.error || "Error al subir el archivo");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setUploadStatus("error");
+      setUploadMessage("Error de conexión. Inténtalo de nuevo.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -78,24 +124,41 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
               accept=".txt"
               onChange={handleFileChange}
               className="flex-1"
+              disabled={isUploading}
             />
             <Upload className="h-4 w-4 text-muted-foreground" />
           </div>
-          {selectedFile && (
-            <div className="flex items-center gap-2 text-sm text-green-600">
+          {selectedFile && uploadStatus === "idle" && (
+            <div className="flex items-center gap-2 text-sm text-blue-600">
               <FileText className="h-4 w-4" />
               <span>{selectedFile.name}</span>
+            </div>
+          )}
+          {uploadStatus === "success" && (
+            <div className="flex items-center gap-2 text-sm text-green-600">
+              <CheckCircle className="h-4 w-4" />
+              <span>{uploadMessage}</span>
+            </div>
+          )}
+          {uploadStatus === "error" && (
+            <div className="flex items-center gap-2 text-sm text-red-600">
+              <AlertCircle className="h-4 w-4" />
+              <span>{uploadMessage}</span>
             </div>
           )}
         </div>
 
         {/* Botón de activar */}
         <Button
-          onClick={handleActivate}
-          disabled={!selectedFile}
+          onClick={handleUploadFile}
+          disabled={!selectedFile || isUploading}
           className="w-full"
         >
-          {selectedFile ? "Activar" : "Selecciona un archivo para activar"}
+          {isUploading
+            ? "Subiendo archivo..."
+            : selectedFile
+            ? "Activar"
+            : "Selecciona un archivo para activar"}
         </Button>
       </CardContent>
     </Card>
