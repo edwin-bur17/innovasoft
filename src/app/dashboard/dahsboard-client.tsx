@@ -3,25 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User } from "@/types/auth/UserInterface";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Bot, Power, User2, Mail, Calendar } from "lucide-react";
+import LogoutDialog from "@/components/logout-dialog";
+import UserCard from "@/components/user-card";
+import LicenseCard from "@/components/license-card";
 
 export default function DashboardClient() {
   const router = useRouter();
@@ -57,71 +41,11 @@ export default function DashboardClient() {
             <p className="text-muted-foreground">Gestiona tus bots</p>
           </div>
 
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="destructive" className="flex items-center gap-2">
-                <Power className="h-4 w-4" />
-                Cerrar sesión
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>¿Cerrar sesión?</DialogTitle>
-                <DialogDescription>
-                  Se cerrará tu sesión actual y deberás volver a iniciar sesión
-                  para acceder nuevamente al sistema.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="flex justify-end gap-3 pt-4">
-                <Button variant="destructive" onClick={handleLogout}>
-                  Sí, cerrar sesión
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <LogoutDialog onLogout={handleLogout} />
         </div>
 
         {/* User Info Card */}
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User2 className="h-5 w-5" />
-              Mi información:
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage alt={userData?.nombre} />
-                <AvatarFallback>
-                  {userData?.nombre
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold">{userData?.nombre}</h3>
-                </div>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Mail className="h-4 w-4" />
-                    {userData?.correo}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    Miembro desde{" "}
-                    {userData?.fecha_creacion
-                      ? new Date(userData.fecha_creacion).toLocaleDateString()
-                      : "No disponible"}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <UserCard userData={userData} />
 
         {/* Licencias Grid */}
         <div>
@@ -129,36 +53,7 @@ export default function DashboardClient() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {userData?.licencias?.length ? (
               userData.licencias.map((licencia) => (
-                <Card
-                  key={licencia.id}
-                  className="hover:shadow-lg transition-shadow"
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <Bot className="h-8 w-8 text-primary" />
-                      <Badge
-                        variant={licencia.estado ? "default" : "secondary"}
-                      >
-                        {licencia.estado ? "Activa" : "Inactiva"}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-lg">
-                      {licencia.servicio.nombre}
-                    </CardTitle>
-                    <CardDescription className="text-sm">
-                      {licencia.servicio.descripcion}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-sm text-muted-foreground">
-                      Caduca el{" "}
-                      {new Date(licencia.caducidad).toLocaleDateString()}
-                    </p>
-                    <p className="text-sm">
-                      Precio: ${licencia.servicio.precio}
-                    </p>
-                  </CardContent>
-                </Card>
+                <LicenseCard key={licencia.id} licencia={licencia} />
               ))
             ) : (
               <p className="text-muted-foreground">No tienes licencias aún</p>
