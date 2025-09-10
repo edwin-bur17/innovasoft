@@ -21,7 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Bot, Power, User2, Calendar } from "lucide-react";
+import { Bot, Power, User2, Mail } from "lucide-react";
 
 
 const userBots = [
@@ -134,16 +134,16 @@ export default function DashboardClient() {
                   {/* <Badge variant="outline">{userData.plan}</Badge> */}
                 </div>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  {/* <div className="flex items-center gap-1">
-                    <Mail className="h-4 w-4" />
-                    {userData.email}
-                  </div> */}
                   <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    Miembro desde{" "}
+                    <Mail className="h-4 w-4" />
+                    {userData?.correo}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {/* <Calendar className="h-4 w-4" /> */}
+                    {/* Miembro desde{" "}
                     {userData?.fecha_ingreso
                       ? new Date(userData.fecha_ingreso).toLocaleDateString()
-                      : "No disponible"}
+                      : "No disponible"} */}
                   </div>
                 </div>
               </div>

@@ -17,8 +17,8 @@ import { Eye, EyeOff, User, Lock } from "lucide-react";
 import { toast } from "sonner"; 
 
 export function LoginForm() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [usuario, setUsuario] = useState("");
+  const [contrasena, setContrasena] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -31,13 +31,13 @@ export function LoginForm() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ usuario, contrasena }),
       });
       console.log("res ->", response)
       const data = await response.json();
       console.log("data del login ->", data)
     if (!response.ok) {
-      toast.error(data.error || "Error en inicio de sesión");
+      toast.error(data.message || "Error en inicio de sesión");
     } else {
       localStorage.setItem("userData", JSON.stringify(data.user));
       toast.success("Inicio de sesión exitoso");
@@ -73,8 +73,8 @@ export function LoginForm() {
                 placeholder="Ingresa tu usuario"
                 className="pl-10"
                 required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={usuario}
+                onChange={(e) => setUsuario(e.target.value)}
               />
             </div>
           </div>
@@ -89,8 +89,8 @@ export function LoginForm() {
                 placeholder="Ingresa tu contraseña"
                 className="pl-10 pr-10"
                 required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={contrasena}
+                onChange={(e) => setContrasena(e.target.value)}
               />
               <Button
                 type="button"

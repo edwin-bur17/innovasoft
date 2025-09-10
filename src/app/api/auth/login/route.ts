@@ -1,90 +1,78 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { cookies } from "next/headers";
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { User } from "@/types/auth/UserInterface";
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const prisma = new PrismaClient();
 
-export async function POST(request: Request) {
+interface LoginBody {
+  usuario: string;
+  contrasena: string;
+}
+
+const JWT_SECRET = process.env.JWT_SECRET || "default_secret";
+
+export async function POST(req: Request) {
   try {
-    const { username, password } = await request.json();
+    const body: LoginBody = await req.json();
+    const { usuario, contrasena } = body;
 
-    if (!username || !password) {
+    if (!usuario || !contrasena) {
       return NextResponse.json(
-        { error: "Usuario y contraseña son requeridos" },
+        { message: "Usuario y contraseña son obligatorios" },
         { status: 400 }
       );
     }
 
-    // Agrega logs para debug
-    console.log("🔄 Intentando conectar a la base de datos...");
-    console.log("📊 Variables de entorno:", {
-      host: process.env.DB_HOST ? "✅ SET" : "❌ NOT SET",
-      user: process.env.DB_USER ? "✅ SET" : "❌ NOT SET",
-      password: process.env.DB_PASS ? "✅ SET" : "❌ NOT SET",
-      database: process.env.DB_NAME ? "✅ SET" : "❌ NOT SET",
-      port: process.env.DB_PORT || "3306 (default)",
-    });
-
-    const [rows] = await db.query<User[]>(
-      "SELECT * FROM login WHERE usuario = ?",
-      [username]
-    );
-
-    if (rows.length === 0 || rows[0].pass !== password) {
+    const user = await prisma.usuario.findUnique({ where: { usuario } });
+    if (!user) {
       return NextResponse.json(
-        { error: "Credenciales inválidas" },
+        { message: "Usuario o contraseña inválidos" },
         { status: 401 }
       );
     }
 
-    const user = rows[0];
-
-    if (!JWT_SECRET) {
-      throw new Error("JWT_SECRET no configurado en variables de entorno");
+    const isPasswordValid = await bcrypt.compare(contrasena, user.contrasena);
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { message: "Usuario o contraseña inválidos" },
+        { status: 401 }
+      );
     }
 
-    // Generar token
+    // Crear token JWT
     const token = jwt.sign(
-      {
-        usuario: user.usuario,
-        tipo: user.tipo,
-        sede: user.sede,
-        cliente: user.cliente,
-      },
+      { id: user.id, usuario: user.usuario, correo: user.correo },
       JWT_SECRET,
-      { expiresIn: "12h" }
+      { expiresIn: "1h" }
     );
 
-    (await cookies()).set("session", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 12, // 12 horas
-      path: "/",
-    });
-
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         message: "Login exitoso",
         user: {
+          id: user.id,
+          nombre: user.nombre,
           usuario: user.usuario,
-          nombre: user.Nombre,
-          fecha_ingreso: user.fecha_ingreso,
-          tipo: user.tipo,
-          sede: user.sede,
-          cliente: user.cliente,
+          correo: user.correo,
         },
       },
       { status: 200 }
     );
+
+    response.cookies.set("session", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      maxAge: 60 * 60,
+    });
+
+    return response;
   } catch (error) {
-    console.error(error);
+    console.error("Error en login:", error);
     return NextResponse.json(
-      {
-        message: "Error al procesar la solicitud de login",
-        error: error,
-      },
+      { message: "Error interno del servidor" },
       { status: 500 }
     );
   }

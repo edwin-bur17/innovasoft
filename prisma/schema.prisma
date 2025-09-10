@@ -1,32 +1,56 @@
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  email     String   @unique
-  password  String
-  name      String
-  phone     String?
-  active    Boolean
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
 }
 
-// model Licencia {
-//   id         Int      @id @default(autoincrement())
-//   expiration DateTime
-//   status     Boolean
-// }
+model Usuario {
+  id                   Int      @id @default(autoincrement())
+  nombre               String   @db.NVarChar(50)
+  usuario              String   @unique @db.NVarChar(50)
+  contrasena           String   @db.NVarChar(255)
+  correo               String   @unique @db.NVarChar(100)
+  estado               Boolean  @default(true)
+  fecha_creacion       DateTime @default(now())
+  fecha_actualizacion  DateTime @updatedAt
+  
+  // Relación con Licencia
+  licencias            Licencia[]
+  
+  @@map("Usuario")
+}
 
-// model Service {
-//   id   Int    @id @default(autoincrement())
-//   name String
+model Servicio {
+  id                   Int      @id @default(autoincrement())
+  fecha_inicio         DateTime
+  fecha_fin            DateTime
+  precio               Decimal  @db.Decimal(10, 2)
+  fecha_creacion       DateTime @default(now())
+  fecha_actualizacion  DateTime @updatedAt
+  
+  // Relación con Licencia
+  licencias            Licencia[]
+  
+  @@map("Servicio")
+}
 
-// }
+model Licencia {
+  id                   Int      @id @default(autoincrement())
+  id_usuario           Int
+  id_servicio          Int
+  caducidad            DateTime @db.Date
+  estado               Boolean  @default(true)
+  fecha_creacion       DateTime @default(now())
+  fecha_actualizacion  DateTime @updatedAt
+  
+  // Relaciones
+  usuario              Usuario  @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+  servicio             Servicio @relation(fields: [id_servicio], references: [id], onDelete: Cascade)
+  
+  // Restricción única
+  @@unique([id_usuario, id_servicio])
+  @@map("Licencia")
+}
