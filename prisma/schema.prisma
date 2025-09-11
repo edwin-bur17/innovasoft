@@ -26,8 +26,6 @@ model Servicio {
   id                   Int      @id @default(autoincrement())
   nombre               String   @db.NVarChar(100)
   descripcion          String   @db.NVarChar(255)
-  fecha_inicio         DateTime?
-  fecha_fin            DateTime?
   precio               Decimal  @db.Decimal(10, 2)
   fecha_creacion       DateTime @default(now())
   fecha_actualizacion  DateTime @updatedAt
@@ -58,12 +56,10 @@ model Proceso {
   id_licencia     Int
   archivo_path    String    @db.NVarChar(255)
   estado          String    @default("APAGADO") @db.NVarChar(20)
-  fecha_subida    DateTime  @default(now())
   fecha_inicio    DateTime?
   fecha_fin       DateTime?
   resultado       String?   @db.NVarChar(Max)
   error_mensaje   String?   @db.NVarChar(500)
-  progreso        Int?       @default(0)
 
   licencia        Licencia  @relation(fields: [id_licencia], references: [id], onDelete: Cascade)
 

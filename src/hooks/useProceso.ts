@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   ConsultaProcesoResponse,
-  // ActualizarProcesoResponse,
   EstadoProceso,
 } from "@/types/ProcesoInterface";
 interface UseProcesoOptions {
@@ -12,7 +11,6 @@ interface UseProcesoOptions {
 interface ProcesoState {
   id: number;
   estado: EstadoProceso;
-  progreso: number | null;
   fecha_inicio: Date | null;
   fecha_fin: Date | null;
   resultado: string | null;
@@ -48,7 +46,7 @@ export function useProceso(options: UseProcesoOptions = {}) {
           setProceso({
             id: result.proceso.id,
             estado: result.proceso.estado,
-            progreso: result.proceso.progreso,
+            // progreso: result.proceso.progreso,
             fecha_inicio: result.proceso.fecha_inicio,
             fecha_fin: result.proceso.fecha_fin,
             resultado: result.proceso.resultado,
@@ -72,7 +70,7 @@ export function useProceso(options: UseProcesoOptions = {}) {
   useEffect(() => {
     if (!autoRefresh || !procesoId || !proceso) return;
 
-    if (proceso.estado === "PROCESANDO") {
+    if (proceso.estado === "PROCESANDO" || proceso.estado === "EJECUTANDO") {
       const interval = setInterval(() => {
         consultarProceso(procesoId);
       }, refreshInterval);

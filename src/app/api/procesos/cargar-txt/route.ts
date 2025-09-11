@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
         archivo_path: uploadResult.secure_url,
         estado: "PROCESANDO",
         fecha_inicio: new Date(),
-        progreso: 0,
+        // progreso: 0,
       },
     });
 
@@ -82,10 +82,10 @@ export async function POST(request: NextRequest) {
       proceso: {
         id: proceso.id,
         archivo_path: proceso.archivo_path,
-        fecha_subida: proceso.fecha_subida,
+        // fecha_subida: proceso.fecha_subida,
         estado: proceso.estado,
         fecha_inicio: proceso.fecha_inicio,
-        progreso: proceso.progreso,
+        // progreso: proceso.progreso,
       },
     });
   } catch (error) {

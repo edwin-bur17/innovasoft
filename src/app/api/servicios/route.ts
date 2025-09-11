@@ -4,15 +4,13 @@ import { prisma } from "@/lib/prisma";
 interface ServicioBody {
   nombre: string;
   descripcion: string;
-  fecha_inicio?: string; // opcional
-  fecha_fin?: string; // opcional
   precio: number;
 }
 
 export async function POST(req: Request) {
   try {
     const body: ServicioBody = await req.json();
-    const { nombre, descripcion, fecha_inicio, fecha_fin, precio } = body;
+    const { nombre, descripcion, precio } = body;
 
     // Validaciones
     if (!nombre || !descripcion || !precio) {
@@ -27,15 +25,11 @@ export async function POST(req: Request) {
         nombre,
         descripcion,
         precio,
-        fecha_inicio: fecha_inicio ? new Date(fecha_inicio) : null,
-        fecha_fin: fecha_fin ? new Date(fecha_fin) : null,
       },
       select: {
         id: true,
         nombre: true,
         descripcion: true,
-        fecha_inicio: true,
-        fecha_fin: true,
         precio: true,
         fecha_creacion: true,
       },

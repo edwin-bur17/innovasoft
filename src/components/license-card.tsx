@@ -2,7 +2,7 @@
 import { Licencia } from "@/types/auth/UserInterface";
 import { UploadResponse, EstadoProceso } from "@/types/ProcesoInterface";
 import { useState, useEffect } from "react";
-import { useProceso } from "@/hooks/useProceso"; 
+import { useProceso } from "@/hooks/useProceso";
 import {
   Card,
   CardContent,
@@ -14,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import {
   Bot,
   Upload,
@@ -26,12 +25,18 @@ import {
   StopCircle,
   Clock,
 } from "lucide-react";
+import LoadingBar from "./loading-bar";
 
 interface LicenseCardProps {
   licencia: Licencia;
 }
 
-type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
+type BadgeVariant =
+  | "default"
+  | "secondary"
+  | "destructive"
+  | "outline"
+  | "success";
 
 export default function LicenseCard({ licencia }: LicenseCardProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -41,18 +46,29 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
   >("idle");
   const [uploadMessage, setUploadMessage] = useState<string>("");
   const [currentProcesoId, setCurrentProcesoId] = useState<number | null>(null);
+  
+
+  // Limpiar mensajes luego de cierto tiempo
+  useEffect(() => {
+    if (uploadStatus === "success" || uploadStatus === "error") {
+      const timer = setTimeout(() => {
+        setUploadStatus("idle");
+        setUploadMessage("");
+      }, 10000); // 10 segundos
+
+      return () => clearTimeout(timer);
+    }
+  }, [uploadStatus]);
 
   // Usar el hook personalizado
   const {
     proceso: procesoActual,
     loading: isConsultingProcess,
     error: procesoError,
-    // consultarProceso,
-    // refetch,
   } = useProceso({
     procesoId: currentProcesoId || undefined,
     autoRefresh: true,
-    refreshInterval: 15000, // 15 segundos 
+    refreshInterval: 15000, // 15 segundos
   });
 
   // Mostrar errores del proceso si los hay
@@ -105,7 +121,6 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
 
         // Establecer el ID del proceso para que el hook lo monitoree
         setCurrentProcesoId(result.proceso.id);
-
       } else {
         setUploadStatus("error");
         setUploadMessage(result.error || "Error al subir el archivo");
@@ -126,7 +141,8 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
     > = {
       APAGADO: { variant: "secondary", label: "Apagado" },
       PROCESANDO: { variant: "default", label: "Procesando" },
-      COMPLETADO: { variant: "default", label: "Completado" },
+      EJECUTANDO: { variant: "default", label: "En ejecución" },
+      COMPLETADO: { variant: "success", label: "Completado" },
       ERROR: { variant: "destructive", label: "Error" },
       PAUSADO: { variant: "outline", label: "Pausado" },
     };
@@ -138,6 +154,8 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
   const getEstadoIcon = (estado: EstadoProceso) => {
     switch (estado) {
       case "PROCESANDO":
+        return <Loader2 className="h-4 w-4 animate-spin" />;
+      case "EJECUTANDO":
         return <Loader2 className="h-4 w-4 animate-spin" />;
       case "COMPLETADO":
         return <CheckCircle className="h-4 w-4 text-green-600" />;
@@ -152,17 +170,22 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
     }
   };
 
-  const formatFecha = (fecha: Date | null) => {
+  const formatFecha = (fecha: Date | string | null) => {
     if (!fecha) return "N/A";
-    return new Date(fecha).toLocaleString();
+    return new Date(fecha).toLocaleString("es-CO", {
+      timeZone: "America/Bogota",
+      dateStyle: "short",
+      timeStyle: "medium",
+    });
   };
+
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <Bot className="h-8 w-8 text-primary" />
-          <Badge variant={licencia.estado ? "default" : "secondary"}>
+          <Badge variant={licencia.estado ? "secondary" : "secondary"}>
             {licencia.estado ? "Activa" : "Inactiva"}
           </Badge>
         </div>
@@ -175,7 +198,6 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
         <p className="text-sm text-muted-foreground">
           Caduca el {new Date(licencia.caducidad).toLocaleDateString()}
         </p>
-        <p className="text-sm">Precio: ${licencia.servicio.precio}</p>
 
         {/* Estado del proceso actual */}
         {procesoActual && (
@@ -190,16 +212,13 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
                 )}
               </div>
             </div>
-
-            {procesoActual.progreso !== null && (
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span>Progreso:</span>
-                  <span>{procesoActual.progreso}%</span>
+            {procesoActual &&
+              (procesoActual.estado === "PROCESANDO" ||
+                procesoActual.estado === "EJECUTANDO") && (
+                <div className="space-y-1">
+                  <LoadingBar />
                 </div>
-                <Progress value={procesoActual.progreso} className="h-2" />
-              </div>
-            )}
+              )}
 
             <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
               <div>
@@ -293,26 +312,6 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
             </Button>
           </>
         )}
-
-        {/* Botón para consultar proceso manualmente */}
-        {/* {procesoActual && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refetch}
-            disabled={isConsultingProcess}
-            className="w-full"
-          >
-            {isConsultingProcess ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Consultando...
-              </>
-            ) : (
-              "Actualizar Estado"
-            )}
-          </Button>
-        )} */}
       </CardContent>
     </Card>
   );

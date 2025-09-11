@@ -120,3 +120,25 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+@keyframes loading-bar {
+  0% {
+    left: -33%;
+    width: 33%;
+  }
+
+  50% {
+    left: 50%;
+    width: 50%;
+  }
+
+  100% {
+    left: 100%;
+    width: 33%;
+  }
+}
+
+.animate-loading-bar {
+  animation: loading-bar 1.5s infinite ease-in-out;
+}

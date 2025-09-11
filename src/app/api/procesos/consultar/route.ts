@@ -38,8 +38,6 @@ export async function GET(request: NextRequest) {
       proceso: {
         id: proceso.id,
         estado: proceso.estado,
-        progreso: proceso.progreso,
-        fecha_subida: proceso.fecha_subida,
         fecha_inicio: proceso.fecha_inicio,
         fecha_fin: proceso.fecha_fin,
         resultado: proceso.resultado,
