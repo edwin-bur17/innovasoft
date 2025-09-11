@@ -4,9 +4,7 @@ import {
   UploadApiResponse,
   UploadApiErrorResponse,
 } from "cloudinary";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 // Config Cloudinary
 cloudinary.config({
@@ -68,10 +66,14 @@ export async function POST(request: NextRequest) {
       }
     );
 
+    // Crear proceso con estado PROCESANDO y fecha de inicio actual
     const proceso = await prisma.proceso.create({
       data: {
         id_licencia: parseInt(licenciaId),
         archivo_path: uploadResult.secure_url,
+        estado: "PROCESANDO",
+        fecha_inicio: new Date(),
+        progreso: 0,
       },
     });
 
@@ -81,6 +83,9 @@ export async function POST(request: NextRequest) {
         id: proceso.id,
         archivo_path: proceso.archivo_path,
         fecha_subida: proceso.fecha_subida,
+        estado: proceso.estado,
+        fecha_inicio: proceso.fecha_inicio,
+        progreso: proceso.progreso,
       },
     });
   } catch (error) {

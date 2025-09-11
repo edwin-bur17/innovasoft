@@ -1,7 +1,8 @@
 "use client";
 import { Licencia } from "@/types/auth/UserInterface";
-import { useState } from "react";
-
+import { UploadResponse, EstadoProceso } from "@/types/ProcesoInterface";
+import { useState, useEffect } from "react";
+import { useProceso } from "@/hooks/useProceso"; 
 import {
   Card,
   CardContent,
@@ -13,29 +14,53 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Bot, Upload, FileText, CheckCircle, AlertCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import {
+  Bot,
+  Upload,
+  FileText,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  PlayCircle,
+  StopCircle,
+  Clock,
+} from "lucide-react";
 
 interface LicenseCardProps {
   licencia: Licencia;
 }
 
-interface UploadResponse {
-  success: boolean;
-  proceso?: {
-    id: number;
-    archivo_path: string;
-    fecha_subida: string;
-  };
-  error?: string;
-}
+type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
 
 export default function LicenseCard({ licencia }: LicenseCardProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadStatus, setUploadStatus] = useState<
     "idle" | "success" | "error"
   >("idle");
   const [uploadMessage, setUploadMessage] = useState<string>("");
+  const [currentProcesoId, setCurrentProcesoId] = useState<number | null>(null);
+
+  // Usar el hook personalizado
+  const {
+    proceso: procesoActual,
+    loading: isConsultingProcess,
+    error: procesoError,
+    // consultarProceso,
+    // refetch,
+  } = useProceso({
+    procesoId: currentProcesoId || undefined,
+    autoRefresh: true,
+    refreshInterval: 15000, // 15 segundos 
+  });
+
+  // Mostrar errores del proceso si los hay
+  useEffect(() => {
+    if (procesoError) {
+      console.error("Error en proceso:", procesoError);
+    }
+  }, [procesoError]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -69,16 +94,18 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
 
       const result: UploadResponse = await response.json();
 
-      if (result.success) {
+      if (result.success && result.proceso) {
         setUploadStatus("success");
         setUploadMessage("Archivo subido exitosamente");
         setSelectedFile(null);
         const fileInput = document.getElementById(
-          "file-upload"
+          `file-upload-${licencia.id}`
         ) as HTMLInputElement;
         if (fileInput) fileInput.value = "";
 
-        console.log("Proceso creado:", result.proceso);
+        // Establecer el ID del proceso para que el hook lo monitoree
+        setCurrentProcesoId(result.proceso.id);
+
       } else {
         setUploadStatus("error");
         setUploadMessage(result.error || "Error al subir el archivo");
@@ -90,6 +117,44 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const getEstadoBadge = (estado: EstadoProceso) => {
+    const estadoConfig: Record<
+      EstadoProceso,
+      { variant: BadgeVariant; label: string }
+    > = {
+      APAGADO: { variant: "secondary", label: "Apagado" },
+      PROCESANDO: { variant: "default", label: "Procesando" },
+      COMPLETADO: { variant: "default", label: "Completado" },
+      ERROR: { variant: "destructive", label: "Error" },
+      PAUSADO: { variant: "outline", label: "Pausado" },
+    };
+
+    const config = estadoConfig[estado];
+    return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
+  const getEstadoIcon = (estado: EstadoProceso) => {
+    switch (estado) {
+      case "PROCESANDO":
+        return <Loader2 className="h-4 w-4 animate-spin" />;
+      case "COMPLETADO":
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case "ERROR":
+        return <AlertCircle className="h-4 w-4 text-red-600" />;
+      case "PAUSADO":
+        return <StopCircle className="h-4 w-4 text-yellow-600" />;
+      case "APAGADO":
+        return <Clock className="h-4 w-4 text-gray-600" />;
+      default:
+        return <Clock className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const formatFecha = (fecha: Date | null) => {
+    if (!fecha) return "N/A";
+    return new Date(fecha).toLocaleString();
   };
 
   return (
@@ -112,54 +177,142 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
         </p>
         <p className="text-sm">Precio: ${licencia.servicio.precio}</p>
 
-        {/* Input de archivo */}
-        <div className="space-y-2">
-          <Label htmlFor="file-upload" className="text-sm font-medium">
-            Subir archivo de configuración
-          </Label>
-          <div className="flex items-center gap-2">
-            <Input
-              id="file-upload"
-              type="file"
-              accept=".txt"
-              onChange={handleFileChange}
-              className="flex-1"
-              disabled={isUploading}
-            />
-            <Upload className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {selectedFile && uploadStatus === "idle" && (
-            <div className="flex items-center gap-2 text-sm text-blue-600">
-              <FileText className="h-4 w-4" />
-              <span>{selectedFile.name}</span>
+        {/* Estado del proceso actual */}
+        {procesoActual && (
+          <div className="bg-gray-50 p-3 rounded-lg space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Estado del Proceso:</span>
+              <div className="flex items-center gap-2">
+                {getEstadoIcon(procesoActual.estado)}
+                {getEstadoBadge(procesoActual.estado)}
+                {isConsultingProcess && (
+                  <Loader2 className="h-3 w-3 animate-spin text-gray-400" />
+                )}
+              </div>
             </div>
-          )}
-          {uploadStatus === "success" && (
-            <div className="flex items-center gap-2 text-sm text-green-600">
-              <CheckCircle className="h-4 w-4" />
-              <span>{uploadMessage}</span>
-            </div>
-          )}
-          {uploadStatus === "error" && (
-            <div className="flex items-center gap-2 text-sm text-red-600">
-              <AlertCircle className="h-4 w-4" />
-              <span>{uploadMessage}</span>
-            </div>
-          )}
-        </div>
 
-        {/* Botón de activar */}
-        <Button
-          onClick={handleUploadFile}
-          disabled={!selectedFile || isUploading}
-          className="w-full"
-        >
-          {isUploading
-            ? "Subiendo archivo..."
-            : selectedFile
-            ? "Activar"
-            : "Selecciona un archivo para activar"}
-        </Button>
+            {procesoActual.progreso !== null && (
+              <div className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span>Progreso:</span>
+                  <span>{procesoActual.progreso}%</span>
+                </div>
+                <Progress value={procesoActual.progreso} className="h-2" />
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+              <div>
+                <span className="font-medium">Inicio:</span>
+                <br />
+                {formatFecha(procesoActual.fecha_inicio)}
+              </div>
+              <div>
+                <span className="font-medium">Fin:</span>
+                <br />
+                {formatFecha(procesoActual.fecha_fin)}
+              </div>
+            </div>
+
+            {procesoActual.error_mensaje && (
+              <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
+                <strong>Error:</strong> {procesoActual.error_mensaje}
+              </div>
+            )}
+
+            {procesoActual.resultado &&
+              procesoActual.estado === "COMPLETADO" && (
+                <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
+                  <strong>Resultado:</strong> {procesoActual.resultado}
+                </div>
+              )}
+          </div>
+        )}
+
+        {/* Input de archivo */}
+        {(!procesoActual ||
+          procesoActual.estado === "APAGADO" ||
+          procesoActual.estado === "ERROR") && (
+          <>
+            <div className="space-y-2">
+              <Label
+                htmlFor={`file-upload-${licencia.id}`}
+                className="text-sm font-medium"
+              >
+                Subir archivo de configuración
+              </Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id={`file-upload-${licencia.id}`}
+                  type="file"
+                  accept=".txt"
+                  onChange={handleFileChange}
+                  className="flex-1"
+                  disabled={isUploading}
+                />
+                <Upload className="h-4 w-4 text-muted-foreground" />
+              </div>
+              {selectedFile && uploadStatus === "idle" && (
+                <div className="flex items-center gap-2 text-sm text-blue-600">
+                  <FileText className="h-4 w-4" />
+                  <span>{selectedFile.name}</span>
+                </div>
+              )}
+              {uploadStatus === "success" && (
+                <div className="flex items-center gap-2 text-sm text-green-600">
+                  <CheckCircle className="h-4 w-4" />
+                  <span>{uploadMessage}</span>
+                </div>
+              )}
+              {uploadStatus === "error" && (
+                <div className="flex items-center gap-2 text-sm text-red-600">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{uploadMessage}</span>
+                </div>
+              )}
+            </div>
+
+            <Button
+              onClick={handleUploadFile}
+              disabled={!selectedFile || isUploading}
+              className="w-full"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Subiendo archivo...
+                </>
+              ) : selectedFile ? (
+                <>
+                  <PlayCircle className="mr-2 h-4 w-4" />
+                  Activar
+                </>
+              ) : (
+                "Selecciona un archivo para activar"
+              )}
+            </Button>
+          </>
+        )}
+
+        {/* Botón para consultar proceso manualmente */}
+        {/* {procesoActual && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refetch}
+            disabled={isConsultingProcess}
+            className="w-full"
+          >
+            {isConsultingProcess ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Consultando...
+              </>
+            ) : (
+              "Actualizar Estado"
+            )}
+          </Button>
+        )} */}
       </CardContent>
     </Card>
   );

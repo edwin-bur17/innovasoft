@@ -16,10 +16,9 @@ model Usuario {
   estado               Boolean  @default(true)
   fecha_creacion       DateTime @default(now())
   fecha_actualizacion  DateTime @updatedAt
-  
-  // Relación con Licencia
+
   licencias            Licencia[]
-  
+
   @@map("Usuario")
 }
 
@@ -27,15 +26,14 @@ model Servicio {
   id                   Int      @id @default(autoincrement())
   nombre               String   @db.NVarChar(100)
   descripcion          String   @db.NVarChar(255)
-  fecha_inicio         DateTime?   
-  fecha_fin            DateTime?  
+  fecha_inicio         DateTime?
+  fecha_fin            DateTime?
   precio               Decimal  @db.Decimal(10, 2)
   fecha_creacion       DateTime @default(now())
   fecha_actualizacion  DateTime @updatedAt
-  
-  // Relación con Licencia
+
   licencias            Licencia[]
-  
+
   @@map("Servicio")
 }
 
@@ -48,22 +46,26 @@ model Licencia {
   fecha_creacion       DateTime  @default(now())
   fecha_actualizacion  DateTime  @updatedAt
 
-  // Relaciones
   usuario              Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
   servicio             Servicio  @relation(fields: [id_servicio], references: [id], onDelete: Cascade)
-  procesos             Proceso[] 
+  procesos             Proceso[]
 
   @@map("Licencia")
 }
 
 model Proceso {
   id              Int       @id @default(autoincrement())
-  id_licencia     Int      
+  id_licencia     Int
   archivo_path    String    @db.NVarChar(255)
+  estado          String    @default("APAGADO") @db.NVarChar(20)
   fecha_subida    DateTime  @default(now())
+  fecha_inicio    DateTime?
+  fecha_fin       DateTime?
+  resultado       String?   @db.NVarChar(Max)
+  error_mensaje   String?   @db.NVarChar(500)
+  progreso        Int?       @default(0)
 
   licencia        Licencia  @relation(fields: [id_licencia], references: [id], onDelete: Cascade)
 
   @@map("Proceso")
 }
-
