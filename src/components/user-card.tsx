@@ -64,9 +64,11 @@ export default function UserCard({ userData }: UserInfoCardProps) {
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                Miembro desde{" "}
+                Miembro desde:{" "}
                 {userData.fecha_creacion
-                  ? new Date(userData.fecha_creacion).toLocaleDateString()
+                  ? new Date(userData.fecha_creacion).toLocaleString("es-CO",{
+                    dateStyle : "long"
+                  })
                   : "No disponible"}
               </div>
             </div>

@@ -26,6 +26,7 @@ import {
   Clock,
 } from "lucide-react";
 import LoadingBar from "./loading-bar";
+import { formatearFecha } from "@/utils/formatFecha";
 
 interface LicenseCardProps {
   licencia: Licencia;
@@ -46,19 +47,7 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
   >("idle");
   const [uploadMessage, setUploadMessage] = useState<string>("");
   const [currentProcesoId, setCurrentProcesoId] = useState<number | null>(null);
-  
-
-  // Limpiar mensajes luego de cierto tiempo
-  useEffect(() => {
-    if (uploadStatus === "success" || uploadStatus === "error") {
-      const timer = setTimeout(() => {
-        setUploadStatus("idle");
-        setUploadMessage("");
-      }, 10000); // 10 segundos
-
-      return () => clearTimeout(timer);
-    }
-  }, [uploadStatus]);
+  const [showProceso, setShowProceso] = useState(true);
 
   // Usar el hook personalizado
   const {
@@ -70,6 +59,35 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
     autoRefresh: true,
     refreshInterval: 15000, // 15 segundos
   });
+
+  // Limpiar mensajes luego de cierto tiempo
+  useEffect(() => {
+    if (uploadStatus === "success" || uploadStatus === "error") {
+      const timer = setTimeout(() => {
+        setUploadStatus("idle");
+        setUploadMessage("");
+      }, 15000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [uploadStatus]);
+
+  useEffect(() => {
+    if (
+      procesoActual &&
+      (procesoActual.estado === "COMPLETADO" ||
+        procesoActual.estado === "ERROR")
+    ) {
+      const timer = setTimeout(() => {
+        setShowProceso(false);
+      }, 15000); 
+
+      return () => clearTimeout(timer);
+    } else {
+      // Si el estado cambia a otro, lo volvemos a mostrar
+      setShowProceso(true);
+    }
+  }, [procesoActual]);
 
   // Mostrar errores del proceso si los hay
   useEffect(() => {
@@ -170,16 +188,6 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
     }
   };
 
-  const formatFecha = (fecha: Date | string | null) => {
-    if (!fecha) return "N/A";
-    return new Date(fecha).toLocaleString("es-CO", {
-      timeZone: "America/Bogota",
-      dateStyle: "short",
-      timeStyle: "medium",
-    });
-  };
-
-
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
@@ -195,12 +203,8 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Caduca el {new Date(licencia.caducidad).toLocaleDateString()}
-        </p>
-
         {/* Estado del proceso actual */}
-        {procesoActual && (
+        {procesoActual && showProceso && (
           <div className="bg-gray-50 p-3 rounded-lg space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Estado del Proceso:</span>
@@ -224,12 +228,12 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
               <div>
                 <span className="font-medium">Inicio:</span>
                 <br />
-                {formatFecha(procesoActual.fecha_inicio)}
+                {formatearFecha(procesoActual.fecha_inicio)}
               </div>
               <div>
                 <span className="font-medium">Fin:</span>
                 <br />
-                {formatFecha(procesoActual.fecha_fin)}
+                {formatearFecha(procesoActual.fecha_fin)}
               </div>
             </div>
 
@@ -251,14 +255,15 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
         {/* Input de archivo */}
         {(!procesoActual ||
           procesoActual.estado === "APAGADO" ||
-          procesoActual.estado === "ERROR") && (
+          procesoActual.estado === "ERROR" ||
+          procesoActual.estado === "COMPLETADO") && (
           <>
             <div className="space-y-2">
               <Label
                 htmlFor={`file-upload-${licencia.id}`}
                 className="text-sm font-medium"
               >
-                Subir archivo de configuración
+                Subir archivo:
               </Label>
               <div className="flex items-center gap-2">
                 <Input
