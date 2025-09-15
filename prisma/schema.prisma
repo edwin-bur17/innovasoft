@@ -8,60 +8,62 @@ datasource db {
 }
 
 model Usuario {
-  id                   Int      @id @default(autoincrement())
-  nombre               String   @db.NVarChar(50)
-  usuario              String   @unique @db.NVarChar(50)
-  contrasena           String   @db.NVarChar(255)
-  correo               String   @unique @db.NVarChar(100)
-  estado               Boolean  @default(true)
-  fecha_creacion       DateTime @default(now())
-  fecha_actualizacion  DateTime @updatedAt
+  id                  Int       @id @default(autoincrement())
+  nombre              String    @db.NVarChar(50)
+  usuario             String    @unique @db.NVarChar(50)
+  contrasena          String    @db.NVarChar(255)
+  correo              String    @unique @db.NVarChar(100)
+  estado              Boolean   @default(true)
+  fecha_creacion      DateTime  @default(now())
+  fecha_actualizacion DateTime  @updatedAt
+  sesion_token        String?   @db.NVarChar(255)
+  sesion_expira       DateTime?
 
-  licencias            Licencia[]
+  licencias Licencia[]
 
   @@map("Usuario")
 }
 
 model Servicio {
-  id                   Int      @id @default(autoincrement())
-  nombre               String   @db.NVarChar(100)
-  descripcion          String   @db.NVarChar(255)
-  precio               Decimal  @db.Decimal(10, 2)
-  fecha_creacion       DateTime @default(now())
-  fecha_actualizacion  DateTime @updatedAt
+  id                  Int      @id @default(autoincrement())
+  nombre              String   @db.NVarChar(100)
+  descripcion         String   @db.NVarChar(255)
+  precio              Decimal  @db.Decimal(10, 2)
+  fecha_creacion      DateTime @default(now())
+  fecha_actualizacion DateTime @updatedAt
 
-  licencias            Licencia[]
+  licencias Licencia[]
 
   @@map("Servicio")
 }
 
 model Licencia {
-  id                   Int       @id @default(autoincrement())
-  id_usuario           Int
-  id_servicio          Int
-  caducidad            DateTime  @db.Date
-  estado               Boolean   @default(false)
-  fecha_creacion       DateTime  @default(now())
-  fecha_actualizacion  DateTime  @updatedAt
+  id                  Int      @id @default(autoincrement())
+  id_usuario          Int
+  id_servicio         Int
+  caducidad           DateTime @db.Date
+  estado              Boolean  @default(false)
+  fecha_creacion      DateTime @default(now())
+  fecha_actualizacion DateTime @updatedAt
 
-  usuario              Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
-  servicio             Servicio  @relation(fields: [id_servicio], references: [id], onDelete: Cascade)
-  procesos             Proceso[]
+  usuario  Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+  servicio Servicio  @relation(fields: [id_servicio], references: [id], onDelete: Cascade)
+  procesos Proceso[]
 
   @@map("Licencia")
 }
 
 model Proceso {
-  id              Int       @id @default(autoincrement())
-  id_licencia     Int
-  archivo_path    String    @db.NVarChar(255)
-  estado          String    @default("APAGADO") @db.NVarChar(20)
-  fecha_inicio    DateTime?
-  fecha_fin       DateTime?
-  resultado       String?   @db.NVarChar(Max)
-  error_mensaje   String?   @db.NVarChar(500)
+  id            Int       @id @default(autoincrement())
+  id_licencia   Int
+  archivo_path  String    @db.NVarChar(255)
+  estado        String    @default("APAGADO") @db.NVarChar(20)
+  fecha_inicio  DateTime?
+  fecha_fin     DateTime?
+  resultado     String?   @db.NVarChar(Max)
+  error_mensaje String?   @db.NVarChar(500)
 
-  licencia        Licencia  @relation(fields: [id_licencia], references: [id], onDelete: Cascade)
+  licencia Licencia @relation(fields: [id_licencia], references: [id], onDelete: Cascade)
 
   @@map("Proceso")
 }

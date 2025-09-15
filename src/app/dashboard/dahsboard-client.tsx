@@ -1,11 +1,11 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User } from "@/types/auth/UserInterface";
 import LogoutDialog from "@/components/logout-dialog";
 import UserCard from "@/components/user-card";
 import LicenseCard from "@/components/license-card";
+import { toast } from "sonner";
 
 export default function DashboardClient() {
   const router = useRouter();
@@ -23,7 +23,8 @@ export default function DashboardClient() {
   const handleLogout = async () => {
     try {
       const response = await fetch("/api/auth/logout", { method: "POST" });
-      await response.json();
+      const data = await response.json();
+      toast.success(data.message)
       localStorage.removeItem("userData");
       router.push("/login");
     } catch (err) {
