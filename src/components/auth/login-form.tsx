@@ -15,7 +15,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [sesionActiva, setSesionActiva] = useState<boolean>(false);
-  const [errorSesion, setErrorSesion] = useState<string>("")
+  const [errorSesion, setErrorSesion] = useState<string>("");
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,7 +35,7 @@ export function LoginForm() {
       if (!response.ok) {
         if (data.error === "SESION_ACTIVA") {
           setSesionActiva(true);
-          setErrorSesion(data.message)
+          setErrorSesion(data.message);
         } else {
           toast.error(data.message || "Error en inicio de sesión");
         }
@@ -127,7 +127,7 @@ export function LoginForm() {
           <div className="pt-2">
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-medium py-2.5 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              variant="gradient"
               disabled={isLoading || sesionActiva}
             >
               <div className="flex items-center justify-center gap-2">
@@ -146,6 +146,15 @@ export function LoginForm() {
             </Button>
           </div>
         </form>
+        <div className="text-center">
+          <Button
+            onClick={() => router.push("/forgot-password")}
+            variant="link"
+            className="text-sky-600 hover:text-sky-700"
+          >
+            Recuperar contraseña
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

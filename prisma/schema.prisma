@@ -11,13 +11,15 @@ model Usuario {
   id                  Int       @id @default(autoincrement())
   nombre              String    @db.NVarChar(50)
   usuario             String    @unique @db.NVarChar(50)
-  contrasena          String    @db.NVarChar(255)
+  contrasena          String    @db.NVarChar(60)
   correo              String    @unique @db.NVarChar(100)
   estado              Boolean   @default(true)
   fecha_creacion      DateTime  @default(now())
   fecha_actualizacion DateTime  @updatedAt
   sesion_token        String?   @db.NVarChar(255)
   sesion_expira       DateTime?
+  reset_token         String?   @db.NVarChar(64)
+  reset_expira        DateTime?
 
   licencias Licencia[]
 

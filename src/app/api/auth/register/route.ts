@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { hashPassword } from "@/utils/api/hash";
 
 interface RegisterBody {
   nombre: string;
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     }
 
     // Hashear contraseña
-    const hashedPassword = await bcrypt.hash(contrasena, 10);
+    const hashedPassword = await hashPassword(contrasena);
 
     // Crear usuario
     const newUser = await prisma.usuario.create({
