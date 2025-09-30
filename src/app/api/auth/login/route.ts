@@ -53,28 +53,28 @@ export async function POST(req: Request) {
       );
     }
 
-    // Verificar si ya tiene sesión activa
-    if (user.sesion_token && user.sesion_expira && user.sesion_expira > new Date()) {
-      try {
-        jwt.verify(user.sesion_token, JWT_SECRET);
+    // // Verificar si ya tiene sesión activa
+    // if (user.sesion_token && user.sesion_expira && user.sesion_expira > new Date()) {
+    //   try {
+    //     jwt.verify(user.sesion_token, JWT_SECRET);
 
-        // Si llegamos aquí, el token es válido y la sesión está activa
-        return NextResponse.json(
-          {
-            message:
-              "Ya tienes una sesión activa. Solo se permite una sesión a la vez.",
-            error: "SESION_ACTIVA",
-          },
-          { status: 409 }
-        );
-      } catch (jwtError) {
-        console.error(jwtError)
-        await prisma.usuario.update({
-          where: { id: user.id },
-          data: { sesion_token: null, sesion_expira: null },
-        });
-      }
-    }
+    //     // Si llegamos aquí, el token es válido y la sesión está activa
+    //     return NextResponse.json(
+    //       {
+    //         message:
+    //           "Ya tienes una sesión activa. Solo se permite una sesión a la vez.",
+    //         error: "SESION_ACTIVA",
+    //       },
+    //       { status: 409 }
+    //     );
+    //   } catch (jwtError) {
+    //     console.error(jwtError)
+    //     await prisma.usuario.update({
+    //       where: { id: user.id },
+    //       data: { sesion_token: null, sesion_expira: null },
+    //     });
+    //   }
+    // }
 
     // Crear nuevo token y actualizar sesión
     const token = jwt.sign(
