@@ -2,7 +2,8 @@ export interface Servicio {
   id: number;
   nombre: string;
   descripcion: string;
-  precio: string; 
+  precio: string;
+  tipos_archivo: string; 
   fecha_inicio: string | null;
   fecha_fin: string | null;
 }

@@ -11,12 +11,10 @@ export interface Proceso {
   id_licencia: number;
   archivo_path: string;
   estado: EstadoProceso;
-  // fecha_subida: Date;
   fecha_inicio: Date | null;
   fecha_fin: Date | null;
   resultado: string | null;
   error_mensaje: string | null;
-  // progreso: number | null;
 }
 
 export interface ProcesoConLicencia extends Proceso {
@@ -31,10 +29,8 @@ export interface UploadResponse {
   proceso?: {
     id: number;
     archivo_path: string;
-    // fecha_subida: Date;
     estado: EstadoProceso;
     fecha_inicio: Date | null;
-    // progreso: number | null;
   };
   error?: string;
 }

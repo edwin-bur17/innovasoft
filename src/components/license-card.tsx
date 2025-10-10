@@ -32,19 +32,12 @@ interface LicenseCardProps {
   licencia: Licencia;
 }
 
-type BadgeVariant =
-  | "default"
-  | "secondary"
-  | "destructive"
-  | "outline"
-  | "success";
+type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "success";
 
 export default function LicenseCard({ licencia }: LicenseCardProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [uploadStatus, setUploadStatus] = useState<
-    "idle" | "success" | "error"
-  >("idle");
+  const [uploadStatus, setUploadStatus] = useState<"idle" | "success" | "error">("idle");
   const [uploadMessage, setUploadMessage] = useState<string>("");
   const [currentProcesoId, setCurrentProcesoId] = useState<number | null>(null);
   const [showProceso, setShowProceso] = useState(true);
@@ -75,12 +68,11 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
   useEffect(() => {
     if (
       procesoActual &&
-      (procesoActual.estado === "COMPLETADO" ||
-        procesoActual.estado === "ERROR")
+      (procesoActual.estado === "COMPLETADO" || procesoActual.estado === "ERROR")
     ) {
       const timer = setTimeout(() => {
         setShowProceso(false);
-      }, 15000); 
+      }, 15000);
 
       return () => clearTimeout(timer);
     } else {
@@ -98,14 +90,25 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.type === "text/plain") {
+
+    if (!file) return;
+
+    const tiposPermitidos = licencia.servicio.tipos_archivo
+      .split(",")
+      .map((tipo) => tipo.trim().toLowerCase());
+
+    const extension = file.name.split(".").pop()?.toLowerCase();
+
+    if (extension && tiposPermitidos.includes(`.${extension}`)) {
       setSelectedFile(file);
       setUploadStatus("idle");
       setUploadMessage("");
     } else {
       setSelectedFile(null);
       setUploadStatus("error");
-      setUploadMessage("Por favor selecciona un archivo .txt válido");
+      setUploadMessage(
+        `Por favor selecciona un archivo válido (${licencia.servicio.tipos_archivo})`
+      );
     }
   };
 
@@ -121,13 +124,13 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
       formData.append("file", selectedFile);
       formData.append("licenciaId", licencia.id.toString());
 
-      const response = await fetch("/api/procesos/cargar-txt", {
+      const response = await fetch("/api/procesos/subir-archivo", {
         method: "POST",
         body: formData,
       });
 
       const result: UploadResponse = await response.json();
-
+      
       if (result.success && result.proceso) {
         setUploadStatus("success");
         setUploadMessage("Archivo subido exitosamente");
@@ -153,17 +156,15 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
   };
 
   const getEstadoBadge = (estado: EstadoProceso) => {
-    const estadoConfig: Record<
-      EstadoProceso,
-      { variant: BadgeVariant; label: string }
-    > = {
-      APAGADO: { variant: "secondary", label: "Apagado" },
-      PROCESANDO: { variant: "default", label: "Procesando" },
-      EJECUTANDO: { variant: "default", label: "En ejecución" },
-      COMPLETADO: { variant: "success", label: "Completado" },
-      ERROR: { variant: "destructive", label: "Error" },
-      PAUSADO: { variant: "outline", label: "Pausado" },
-    };
+    const estadoConfig: Record<EstadoProceso, { variant: BadgeVariant; label: string }> =
+      {
+        APAGADO: { variant: "secondary", label: "Apagado" },
+        PROCESANDO: { variant: "default", label: "Procesando" },
+        EJECUTANDO: { variant: "default", label: "En ejecución" },
+        COMPLETADO: { variant: "success", label: "Completado" },
+        ERROR: { variant: "destructive", label: "Error" },
+        PAUSADO: { variant: "outline", label: "Pausado" },
+      };
 
     const config = estadoConfig[estado];
     return <Badge variant={config.variant}>{config.label}</Badge>;
@@ -243,12 +244,11 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
               </div>
             )}
 
-            {procesoActual.resultado &&
-              procesoActual.estado === "COMPLETADO" && (
-                <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
-                  <strong>Resultado:</strong> {procesoActual.resultado}
-                </div>
-              )}
+            {procesoActual.resultado && procesoActual.estado === "COMPLETADO" && (
+              <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
+                <strong>Resultado:</strong> {procesoActual.resultado}
+              </div>
+            )}
           </div>
         )}
 
@@ -269,7 +269,7 @@ export default function LicenseCard({ licencia }: LicenseCardProps) {
                 <Input
                   id={`file-upload-${licencia.id}`}
                   type="file"
-                  accept=".txt"
+                  accept={licencia.servicio.tipos_archivo}
                   onChange={handleFileChange}
                   className="flex-1"
                   disabled={isUploading}

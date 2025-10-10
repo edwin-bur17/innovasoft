@@ -8,49 +8,47 @@ datasource db {
 }
 
 model Usuario {
-  id                  Int       @id @default(autoincrement())
-  nombre              String    @db.NVarChar(50)
-  usuario             String    @unique @db.NVarChar(50)
-  contrasena          String    @db.NVarChar(60)
-  correo              String    @unique @db.NVarChar(100)
-  estado              Boolean   @default(true)
-  fecha_creacion      DateTime  @default(now())
-  fecha_actualizacion DateTime  @updatedAt
-  sesion_token        String?   @db.NVarChar(255)
+  id                  Int        @id @default(autoincrement())
+  nombre              String     @db.NVarChar(50)
+  usuario             String     @unique @db.NVarChar(50)
+  contrasena          String     @db.NVarChar(60)
+  correo              String     @unique @db.NVarChar(100)
+  estado              Boolean    @default(true)
+  fecha_creacion      DateTime   @default(now())
+  fecha_actualizacion DateTime   @updatedAt
   sesion_expira       DateTime?
-  reset_token         String?   @db.NVarChar(64)
+  sesion_token        String?    @db.NVarChar(255)
   reset_expira        DateTime?
-
-  licencias Licencia[]
+  reset_token         String?    @db.NVarChar(64)
+  licencias           Licencia[]
 
   @@map("Usuario")
 }
 
 model Servicio {
-  id                  Int      @id @default(autoincrement())
-  nombre              String   @db.NVarChar(100)
-  descripcion         String   @db.NVarChar(255)
-  precio              Decimal  @db.Decimal(10, 2)
-  fecha_creacion      DateTime @default(now())
-  fecha_actualizacion DateTime @updatedAt
-
-  licencias Licencia[]
+  id                  Int        @id @default(autoincrement())
+  precio              Decimal    @db.Decimal(10, 2)
+  fecha_creacion      DateTime   @default(now())
+  fecha_actualizacion DateTime   @updatedAt
+  descripcion         String     @db.NVarChar(255)
+  nombre              String     @db.NVarChar(100)
+  tipos_archivo       String     @default(".txt") @db.NVarChar(30)
+  licencias           Licencia[]
 
   @@map("Servicio")
 }
 
 model Licencia {
-  id                  Int      @id @default(autoincrement())
+  id                  Int       @id @default(autoincrement())
   id_usuario          Int
   id_servicio         Int
-  caducidad           DateTime @db.Date
-  estado              Boolean  @default(false)
-  fecha_creacion      DateTime @default(now())
-  fecha_actualizacion DateTime @updatedAt
-
-  usuario  Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
-  servicio Servicio  @relation(fields: [id_servicio], references: [id], onDelete: Cascade)
-  procesos Proceso[]
+  caducidad           DateTime  @db.Date
+  estado              Boolean   @default(false)
+  fecha_creacion      DateTime  @default(now())
+  fecha_actualizacion DateTime  @updatedAt
+  servicio            Servicio  @relation(fields: [id_servicio], references: [id], onDelete: Cascade)
+  usuario             Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+  procesos            Proceso[]
 
   @@map("Licencia")
 }
@@ -59,13 +57,12 @@ model Proceso {
   id            Int       @id @default(autoincrement())
   id_licencia   Int
   archivo_path  String    @db.NVarChar(255)
-  estado        String    @default("APAGADO") @db.NVarChar(20)
-  fecha_inicio  DateTime?
-  fecha_fin     DateTime?
-  resultado     String?   @db.NVarChar(Max)
   error_mensaje String?   @db.NVarChar(500)
-
-  licencia Licencia @relation(fields: [id_licencia], references: [id], onDelete: Cascade)
+  estado        String    @default("APAGADO") @db.NVarChar(20)
+  fecha_fin     DateTime?
+  fecha_inicio  DateTime?
+  resultado     String?   @db.NVarChar(Max)
+  licencia      Licencia  @relation(fields: [id_licencia], references: [id], onDelete: Cascade)
 
   @@map("Proceso")
 }
