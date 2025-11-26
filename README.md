@@ -1,4 +1,4 @@
-# Innovasoft - Sistema de Gestión de Licencias
+# Innovasoft
 
 ## Tabla de Contenidos
 
@@ -9,12 +9,8 @@
 - [Configuración](#configuración)
 - [Estructura del Proyecto](#estructura-del-proyecto)
 - [Base de Datos](#base-de-datos)
-- [API Endpoints](#api-endpoints)
-- [Uso](#uso)
 - [Deployment](#deployment)
 - [Troubleshooting](#troubleshooting)
-- [Contribución](#contribución)
-- [Licencia](#licencia)
 
 ---
 
@@ -351,138 +347,6 @@ pnpm prisma migrate reset
 
 ---
 
-##  API Endpoints
-
-### Autenticación
-
-#### POST `/api/auth/register`
-
-Registrar un nuevo usuario.
-
-**Body:**
-
-```json
-{
-  "nombre": "Juan Pérez",
-  "usuario": "juanperez",
-  "correo": "juan@example.com",
-  "contrasena": "password123"
-}
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Usuario registrado exitosamente"
-}
-```
-
-#### POST `/api/auth/login`
-
-Iniciar sesión.
-
-**Body:**
-
-```json
-{
-  "usuario": "juanperez",
-  "contrasena": "password123"
-}
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "user": {
-    "id": 1,
-    "nombre": "Juan Pérez",
-    "usuario": "juanperez",
-    "correo": "juan@example.com",
-    "licencias": [...]
-  },
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-#### POST `/api/auth/logout`
-
-Cerrar sesión.
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Sesión cerrada exitosamente"
-}
-```
-
-#### POST `/api/auth/forgot-password`
-
-Solicitar restablecimiento de contraseña.
-
-**Body:**
-
-```json
-{
-  "correo": "juan@example.com"
-}
-```
-
-#### POST `/api/auth/reset-password`
-
-Restablecer contraseña.
-
-**Body:**
-
-```json
-{
-  "token": "abc123...",
-  "nuevaContrasena": "newpassword123"
-}
-```
-
-### Licencias
-
-#### GET `/api/licencias`
-
-Obtener todas las licencias del usuario autenticado.
-
-#### POST `/api/licencias`
-
-Crear una nueva licencia.
-
-### Servicios
-
-#### GET `/api/servicios`
-
-Obtener todos los servicios disponibles.
-
-### Procesos
-
-#### GET `/api/procesos/consultar?procesoId=1`
-
-Consultar el estado de un proceso.
-
-#### POST `/api/procesos/subir-archivo`
-
-Subir un archivo para procesamiento.
-
-**Body (FormData):**
-
-```
-file: [archivo]
-licenciaId: 1
-```
-
----
-
-## Uso
-
 ### Desarrollo
 
 ```bash
@@ -531,46 +395,6 @@ pnpm prisma studio
    ```bash
    vercel --prod
    ```
-
-### Docker
-
-```dockerfile
-# Dockerfile
-FROM node:18-alpine AS base
-
-# Dependencias
-FROM base AS deps
-WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
-
-# Build
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN npx prisma generate
-RUN npm run build
-
-# Producción
-FROM base AS runner
-WORKDIR /app
-ENV NODE_ENV production
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-
-EXPOSE 3000
-CMD ["node", "server.js"]
-```
-
-```bash
-# Build
-docker build -t innovasoft .
-
-# Run
-docker run -p 3000:3000 --env-file .env innovasoft
-```
 
 ### Variables de Entorno en Producción
 
@@ -643,9 +467,9 @@ Error: Invalid cloud_name
 
 ## Contacto
 
-**Desarrollador:** Edwin Burbano  
-**GitHub:** [@edwdev](https://github.com/edwdev)  
-**Email:** contacto@innovasoft.com
+**Desarrollador:** Edwin Esneider Burbano Luna 
+**GitHub:** [@snydev](https://github.com/edwin-bur17)  
+**Email:** edwinburbano473@gmail.com
 
 ---
 
